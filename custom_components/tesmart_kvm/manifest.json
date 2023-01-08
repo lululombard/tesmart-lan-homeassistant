@@ -1,0 +1,10 @@
+{
+  "domain": "tesmart_kvm",
+  "name": "TESMart KVM",
+  "documentation": "https://github.com/lululombard/tesmart-kvm-homeassistant",
+  "issue_tracker": "https://github.com/lululombard/tesmart-kvm-homeassistant/issues",
+  "dependencies": [],
+  "config_flow": false,
+  "codeowners": ["@lululombard"],
+  "requirements": []
+}
