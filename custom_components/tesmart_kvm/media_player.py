@@ -46,7 +46,7 @@ _VALID_STATES = [
     STATE_PAUSED,
     STATE_PLAYING,
 ]
-CONF_MEDIAPLAYER = "media_players"
+CONF_KVM = "kvms"
 CONF_HOST = "host"
 CONF_PORT = "port"
 CONF_SOURCES = "sources"
@@ -66,7 +66,7 @@ MEDIA_PLAYER_SCHEMA = vol.Schema(
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_MEDIAPLAYER): cv.schema_with_slug_keys(MEDIA_PLAYER_SCHEMA)}
+    {vol.Required(CONF_KVM): cv.schema_with_slug_keys(MEDIA_PLAYER_SCHEMA)}
 )
 
 
@@ -81,7 +81,7 @@ async def _async_create_entities(hass, config):
     """Set up the Template switch."""
     media_players = []
 
-    for device, device_config in config[CONF_MEDIAPLAYER].items():
+    for device, device_config in config[CONF_KVM].items():
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         unique_id = device_config.get(CONF_UNIQUE_ID)
         host = device_config.get(CONF_HOST)
