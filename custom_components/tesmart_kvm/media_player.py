@@ -1,5 +1,6 @@
 """Support for switches which integrates with other components."""
 import logging
+import time
 import socket
 
 import homeassistant.helpers.config_validation as cv
@@ -58,7 +59,7 @@ KVM_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=5000): cv.positive_int,
         vol.Optional(
-            CONF_SOURCES, default=["HDMI {}".format(i) for i in range(0, 8)]
+            CONF_SOURCES, default=["HDMI {}".format(i) for i in range(1, 9)]
         ): [cv.string],
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -115,6 +116,7 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
 
         self.host = host
         self.port = port
+        self.active_port = None
         self.sources = sources
 
     @property
@@ -160,15 +162,19 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
     @property
     def source(self):
         """Return the current input source."""
+        if self.active_port is not None:
+            return self.active_port
+
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         s.connect((self.host, self.port))
 
-        data = bytes.fromhex("AABB030100EE")
+        data = bytes.fromhex("AABB031000EE")
         s.send(data)
-        source = s.recv(4)
-        print(source)
-        return source
+        time.sleep(0.2)
+        self.active_port = self.sources[s.recv(6)[5] - 22]
+
+        return self.active_port
 
     @property
     def source_list(self):
@@ -182,11 +188,10 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
 
     async def async_select_source(self, source):
         """Set the input source."""
-        # TODO
-        print(source)
-        print(self.sources)
+
+        self.active_port = source
 
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((self.host, self.port))
-        data = bytes.fromhex(f"AABB0301{int(source):02x}EE")
+        data = bytes.fromhex(f"AABB0301{int(self.sources.index(source) + 1):02x}EE")
         s.send(data)
