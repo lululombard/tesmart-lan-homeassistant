@@ -53,7 +53,7 @@ CONF_SOURCES = "sources"
 CONF_UNIQUE_ID = "unique_id"
 
 
-MEDIA_PLAYER_SCHEMA = vol.Schema(
+KVM_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=5000): cv.positive_int,
@@ -66,7 +66,7 @@ MEDIA_PLAYER_SCHEMA = vol.Schema(
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_KVM): cv.schema_with_slug_keys(MEDIA_PLAYER_SCHEMA)}
+    {vol.Required(CONF_KVM): cv.schema_with_slug_keys(KVM_SCHEMA)}
 )
 
 
@@ -79,7 +79,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def _async_create_entities(hass, config):
     """Set up the Template switch."""
-    media_players = []
+    kvms = []
 
     for device, device_config in config[CONF_KVM].items():
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
@@ -88,10 +88,10 @@ async def _async_create_entities(hass, config):
         port = device_config.get(CONF_PORT)
         sources = device_config.get(CONF_SOURCES)
 
-        media_players.append(
+        kvms.append(
             TesmartKvm(hass, device, friendly_name, unique_id, host, port, sources)
         )
-    return media_players
+    return kvms
 
 
 class TesmartKvm(TemplateEntity, MediaPlayerEntity):
