@@ -57,7 +57,9 @@ MEDIA_PLAYER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=5000): cv.positive_int,
-        vol.Optional(CONF_SOURCES, default=['HDMI {}'.format(i) for i in range(0, 8)]): [cv.string],
+        vol.Optional(
+            CONF_SOURCES, default=["HDMI {}".format(i) for i in range(0, 8)]
+        ): [cv.string],
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     }
@@ -87,15 +89,7 @@ async def _async_create_entities(hass, config):
         sources = device_config.get(CONF_SOURCES)
 
         media_players.append(
-            TesmartKvm(
-                hass,
-                device,
-                friendly_name,
-                unique_id,
-                host,
-                port,
-                sources
-            )
+            TesmartKvm(hass, device, friendly_name, unique_id, host, port, sources)
         )
     return media_players
 
@@ -103,16 +97,7 @@ async def _async_create_entities(hass, config):
 class TesmartKvm(TemplateEntity, MediaPlayerEntity):
     """Representation of a Template Media player."""
 
-    def __init__(
-        self,
-        hass,
-        device_id,
-        friendly_name,
-        unique_id,
-        host,
-        port,
-        sources
-    ):
+    def __init__(self, hass, device_id, friendly_name, unique_id, host, port, sources):
         """Initialize the Template Media player."""
         super().__init__(
             hass,
@@ -166,7 +151,6 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
     def available(self) -> bool:
         """Return if the device is available."""
         return True
-
 
     @property
     def state(self):
