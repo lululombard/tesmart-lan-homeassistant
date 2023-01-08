@@ -173,7 +173,7 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
     @property
     def source_list(self):
         """List of available input sources."""
-        return self._source_list
+        return self.sources
 
     @property
     def unique_id(self):
