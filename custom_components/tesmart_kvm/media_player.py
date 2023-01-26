@@ -13,6 +13,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.media_player.const import (
     SUPPORT_SELECT_SOURCE,
+    SUPPORT_VOLUME_MUTE
 )
 from homeassistant.components.template.const import (
     DOMAIN,
@@ -116,8 +117,10 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
 
         self.host = host
         self.port = port
-        self.active_port = None
         self.sources = sources
+
+        self.active_port = None
+        self.muted = False
 
     @property
     def name(self):
@@ -127,7 +130,7 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
     @property
     def device_class(self):
         """Return the class of this device."""
-        return "receiver"
+        return "tv"
 
     @property
     def is_on(self):
@@ -146,6 +149,7 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
         support = 0
 
         support |= SUPPORT_SELECT_SOURCE
+        support |= SUPPORT_VOLUME_MUTE
 
         return support
 
@@ -165,14 +169,17 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
         if self.active_port is not None:
             return self.active_port
 
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-        s.connect((self.host, self.port))
+            s.connect((self.host, self.port))
 
-        data = bytes.fromhex("AABB031000EE")
-        s.send(data)
-        time.sleep(0.2)
-        self.active_port = self.sources[s.recv(6)[5] - 22]
+            data = bytes.fromhex("AABB031000EE")
+            s.send(data)
+            time.sleep(0.2)
+            self.active_port = self.sources[s.recv(6)[5] - 22]
+        except Exception:
+            pass
 
         return self.active_port
 
@@ -180,6 +187,10 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
     def source_list(self):
         """List of available input sources."""
         return self.sources
+
+    @property
+    def is_volume_muted(self):
+        return self.muted
 
     @property
     def unique_id(self):
@@ -191,7 +202,27 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
 
         self.active_port = source
 
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.connect((self.host, self.port))
-        data = bytes.fromhex(f"AABB0301{int(self.sources.index(source) + 1):02x}EE")
-        s.send(data)
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((self.host, self.port))
+            data = bytes.fromhex(f"AABB0301{int(self.sources.index(source) + 1):02x}EE")
+            s.send(data)
+        except Exception:
+            pass
+
+        self.async_schedule_update_ha_state()
+
+
+    async def async_mute_volume(self, mute):
+        self.muted = mute
+        packet = '00' if mute else '01'
+
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((self.host, self.port))
+            data = bytes.fromhex(f"AABB0302{packet}EE")
+            s.send(data)
+        except Exception:
+            pass
+
+        self.async_schedule_update_ha_state()
