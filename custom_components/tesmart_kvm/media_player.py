@@ -35,32 +35,20 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.script import Script
 
-# from . import extract_entities, initialise_templates
-
-
 _LOGGER = logging.getLogger(__name__)
-_VALID_STATES = [
-    STATE_ON,
-    STATE_OFF,
-    "true",
-    "false",
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_PLAYING,
-]
+
 CONF_KVM = "kvms"
 CONF_HOST = "host"
 CONF_PORT = "port"
 CONF_SOURCES = "sources"
 CONF_UNIQUE_ID = "unique_id"
 
-
 KVM_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=5000): cv.positive_int,
         vol.Optional(
-            CONF_SOURCES, default=["HDMI {}".format(i) for i in range(1, 9)]
+            CONF_SOURCES, default=["HDMI{}".format(i) for i in range(1, 17)]
         ): [cv.string],
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -74,7 +62,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template binary sensors."""
-
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
@@ -101,9 +88,7 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
 
     def __init__(self, hass, device_id, friendly_name, unique_id, host, port, sources):
         """Initialize the Template Media player."""
-        super().__init__(
-            hass,
-        )
+        super().__init__(hass)
         self.hass = hass
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass
@@ -145,12 +130,9 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-
         support = 0
-
         support |= SUPPORT_SELECT_SOURCE
         support |= SUPPORT_VOLUME_MUTE
-
         return support
 
     @property
@@ -171,13 +153,11 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
 
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
             s.connect((self.host, self.port))
-
             data = bytes.fromhex("AABB031000EE")
             s.send(data)
             time.sleep(0.2)
-            self.active_port = self.sources[s.recv(6)[5] - 22]
+            self.active_port = self.sources[s.recv(6)[5] - 1]
         except Exception:
             pass
 
@@ -190,33 +170,32 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
 
     @property
     def is_volume_muted(self):
+        """Return true if volume is muted."""
         return self.muted
 
     @property
     def unique_id(self):
-        """Unique id."""
+        """Return the unique id."""
         return self._unique_id
 
     async def async_select_source(self, source):
         """Set the input source."""
-
         self.active_port = source
-
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
-            data = bytes.fromhex(f"AABB0301{int(self.sources.index(source) + 1):02x}EE")
+            data = bytes.fromhex(
+                f"AABB0301{int(self.sources.index(source) + 1):02x}EE"
+            )
             s.send(data)
         except Exception:
             pass
-
         self.async_schedule_update_ha_state()
 
-
     async def async_mute_volume(self, mute):
+        """Mute the volume."""
         self.muted = mute
-        packet = '00' if mute else '01'
-
+        packet = "00" if mute else "01"
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
@@ -224,5 +203,4 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
             s.send(data)
         except Exception:
             pass
-
         self.async_schedule_update_ha_state()
