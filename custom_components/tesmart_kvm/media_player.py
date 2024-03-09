@@ -1,39 +1,26 @@
-"""Support for switches which integrates with other components."""
 import logging
 import time
 import socket
+from json import loads, dumps  # Add this import
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 import voluptuous as vol
 from homeassistant.components.media_player import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
 )
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_VOLUME_MUTE
-)
-from homeassistant.components.template.const import (
-    DOMAIN,
-    PLATFORMS,
-)
+from homeassistant.components.media_player.const import SUPPORT_SELECT_SOURCE
+from homeassistant.components.template.const import DOMAIN, PLATFORMS
 from homeassistant.components.template.template_entity import TemplateEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    STATE_IDLE,
-    STATE_OFF,
     STATE_ON,
-    STATE_PAUSED,
-    STATE_PLAYING,
 )
 from homeassistant.core import callback
-from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.reload import async_setup_reload_service
-from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,16 +29,19 @@ CONF_HOST = "host"
 CONF_PORT = "port"
 CONF_SOURCES = "sources"
 CONF_UNIQUE_ID = "unique_id"
+CONF_SOURCE_IGNORE = "source_ignore"
+
+SOURCES = {f'HDMI {i}': f'HDMI {i}' for i in range(1, 17)}
 
 KVM_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=5000): cv.positive_int,
-        vol.Optional(
-            CONF_SOURCES, default=["HDMI{}".format(i) for i in range(1, 17)]
-        ): [cv.string],
+        vol.Optional(CONF_SOURCES): cv.ensure_list,
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Optional(CONF_SOURCE_IGNORE, default=[]): vol.All(cv.ensure_list, [cv.string]),
+
     }
 )
 
@@ -103,9 +93,18 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
         self.host = host
         self.port = port
         self.sources = sources
+        if sources is not None and sources != {}:
+            self._source_list = loads(dumps(sources).strip('[]'))
+        else:
+            self._source_list = SOURCES.copy()
+            
+        self._source_ignore = []  # Initialize _source_ignore as an empty list
+        if sources is not None and CONF_SOURCE_IGNORE in sources:
+            self._source_ignore = sources[CONF_SOURCE_IGNORE]
+            
+        self.active_port = None  # Initialize active_port attribute
 
-        self.active_port = None
-        self.muted = False
+
 
     @property
     def name(self):
@@ -132,7 +131,6 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
         """Flag media player features that are supported."""
         support = 0
         support |= SUPPORT_SELECT_SOURCE
-        support |= SUPPORT_VOLUME_MUTE
         return support
 
     @property
@@ -165,13 +163,16 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
 
     @property
     def source_list(self):
-        """List of available input sources."""
-        return self.sources
+        """Return the list of available input sources."""
+        source_list = self._source_list.copy()
+        for source_ignore in self._source_ignore:
+            if source_ignore in source_list:
+                del source_list[source_ignore]
 
-    @property
-    def is_volume_muted(self):
-        """Return true if volume is muted."""
-        return self.muted
+        if len(source_list) > 0:
+            return list(source_list.values())
+        else:
+            return None
 
     @property
     def unique_id(self):
@@ -187,19 +188,6 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
             data = bytes.fromhex(
                 f"AABB0301{int(self.sources.index(source) + 1):02x}EE"
             )
-            s.send(data)
-        except Exception:
-            pass
-        self.async_schedule_update_ha_state()
-
-    async def async_mute_volume(self, mute):
-        """Mute the volume."""
-        self.muted = mute
-        packet = "00" if mute else "01"
-        try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((self.host, self.port))
-            data = bytes.fromhex(f"AABB0302{packet}EE")
             s.send(data)
         except Exception:
             pass
