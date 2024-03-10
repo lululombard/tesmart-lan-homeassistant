@@ -38,7 +38,7 @@ If you are upgrading from version 0.0.1:
     kvms:
       tesmart_hdmi_switch:
         friendly_name: Nerdroom HDMI Switch
-        host: !secret hdmi_switch_nerdroom_host
+        host: !secret hdmi_switch_host
         sources:
           HDMI 1: NES
           HDMI 2: SENES
