@@ -55,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template binary sensors."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await async_setup_reload_service(hass, DOMAIN)
     async_add_entities(await _async_create_entities(hass, config))
 
 
