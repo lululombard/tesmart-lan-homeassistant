@@ -1,12 +1,12 @@
 {
-  "domain": "tesmart_kvm",
-  "name": "TESMart KVM",
-  "documentation": "https://github.com/lululombard/tesmart-kvm-homeassistant",
-  "issue_tracker": "https://github.com/lululombard/tesmart-kvm-homeassistant/issues",
+  "domain": "tesmart_lan",
+  "name": "TESMart Lan",
+  "documentation": "https://github.com/lululombard/tesmart-lan-homeassistant",
+  "issue_tracker": "https://github.com/lululombard/tesmart-lan-homeassistant/issues",
   "dependencies": [],
   "after_dependencies": [],
   "iot_class": "local_polling",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "config_flow": false,
   "codeowners": ["@lululombard"],
   "requirements": []
