@@ -35,7 +35,7 @@ If you are upgrading from version 0.0.1:
 
 ```yaml
   - platform: tesmart_lan
-    kvms:
+    lans:
       tesmart_hdmi_switch:
         friendly_name: Nerdroom HDMI Switch
         host: !secret hdmi_switch_host

@@ -10,9 +10,10 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
 )
-from homeassistant.components.media_player.const import SUPPORT_SELECT_SOURCE
-from homeassistant.components.template.const import DOMAIN, PLATFORMS
-from homeassistant.components.template.template_entity import TemplateEntity
+from homeassistant.components.media_player.const import (
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_SELECT_SOUND_MODE,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -24,7 +25,9 @@ from homeassistant.helpers.reload import async_setup_reload_service
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_KVM = "kvms"
+DOMAIN = "tesmart_lan"  # Define the domain
+
+CONF_LAN = "lans"
 CONF_HOST = "host"
 CONF_PORT = "port"
 CONF_SOURCES = "sources"
@@ -33,7 +36,7 @@ CONF_SOURCE_IGNORE = "source_ignore"
 
 SOURCES = {f'HDMI {i}': f'HDMI {i}' for i in range(1, 17)}
 
-KVM_SCHEMA = vol.Schema(
+LAN_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=5000): cv.positive_int,
@@ -46,7 +49,7 @@ KVM_SCHEMA = vol.Schema(
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_KVM): cv.schema_with_slug_keys(KVM_SCHEMA)}
+    {vol.Required(CONF_LAN): cv.schema_with_slug_keys(LAN_SCHEMA)}
 )
 
 
@@ -58,27 +61,26 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def _async_create_entities(hass, config):
     """Set up the Template switch."""
-    kvms = []
+    lans = []
 
-    for device, device_config in config[CONF_KVM].items():
+    for device, device_config in config[CONF_LAN].items():
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         unique_id = device_config.get(CONF_UNIQUE_ID)
         host = device_config.get(CONF_HOST)
         port = device_config.get(CONF_PORT)
         sources = device_config.get(CONF_SOURCES)
 
-        kvms.append(
-            TesmartKvm(hass, device, friendly_name, unique_id, host, port, sources)
+        lans.append(
+            TesmartLan(hass, device, friendly_name, unique_id, host, port, sources)
         )
-    return kvms
+    return lans
 
 
-class TesmartKvm(TemplateEntity, MediaPlayerEntity):
+class TesmartLan(MediaPlayerEntity):
     """Representation of a Template Media player."""
 
     def __init__(self, hass, device_id, friendly_name, unique_id, host, port, sources):
         """Initialize the Template Media player."""
-        super().__init__(hass)
         self.hass = hass
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass
@@ -103,8 +105,8 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
             self._source_ignore = sources[CONF_SOURCE_IGNORE]
             
         self.active_port = None  # Initialize active_port attribute
-
-
+        self._sound_mode = None
+        self._last_selected_source = None  # Initialize last selected source attribute
 
     @property
     def name(self):
@@ -131,6 +133,7 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
         """Flag media player features that are supported."""
         support = 0
         support |= SUPPORT_SELECT_SOURCE
+        support |= SUPPORT_SELECT_SOUND_MODE
         return support
 
     @property
@@ -142,6 +145,16 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
     def state(self):
         """Return the state of the player."""
         return STATE_ON
+
+    @property
+    def sound_mode(self):
+        """Return the current sound mode."""
+        return self._sound_mode
+
+    @property
+    def sound_mode_list(self):
+        """Return the available sound modes."""
+        return ["Beeper On", "Beeper Off"]  # Update with actual sound modes
 
     @property
     def source(self):
@@ -192,3 +205,34 @@ class TesmartKvm(TemplateEntity, MediaPlayerEntity):
         except Exception:
             pass
         self.async_schedule_update_ha_state()
+
+    async def async_select_sound_mode(self, sound_mode):
+        """Set the sound mode."""
+        packet = "01" if sound_mode == "Beeper On" else "00"
+
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((self.host, self.port))
+            data = bytes.fromhex(f"AABB0302{packet}EE")
+            s.send(data)
+        except Exception:
+            pass
+        
+        self._sound_mode = sound_mode
+        self.async_schedule_update_ha_state()
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        
+        # Retrieve the last selected source from the entity registry
+        if self.entity_id in self.hass.data:
+            self._last_selected_source = self.hass.data[self.entity_id].get("last_selected_source")
+
+    async def async_will_remove_from_hass(self):
+        """Entity being removed from hass."""
+        # Store the last selected source in the entity registry
+        if self.entity_id not in self.hass.data:
+            self.hass.data[self.entity_id] = {}
+        self.hass.data[self.entity_id]["last_selected_source"] = self._last_selected_source
+        await super().async_will_remove_from_hass()
