@@ -1,93 +1,68 @@
-# TESMart KVM control
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=for-the-badge)](https://github.com/hacs/integration)
 
-[![GitHub Release][releases-shield]][releases]
-[![GitHub Activity][commits-shield]][commits]
-[![License][license-shield]](LICENSE)
+# TESMart TCPIP Control
 
-[![pre-commit][pre-commit-shield]][pre-commit]
-[![Black][black-shield]][black]
+This component enables control of Tesmart LAN 232 devices including KVMs, Matrixes, and Soundbars.
 
-[![hacs][hacsbadge]][hacs]
-[![Project Maintenance][maintenance-shield]][user_profile]
-[![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
+Included, but not limited to, are:
 
-[![Discord][discord-shield]][discord]
-[![Community Forum][forum-shield]][forum]
-
-**TO BE REMOVED: If you need help, as a developer, to use this custom component tempalte,
-please look at the [User Guide in the Cookiecutter documentation](https://cookiecutter-homeassistant-custom-component.readthedocs.io/en/stable/quickstart.html)**
-
-**This component will set up the following platforms.**
-
-| Platform        | Description                                                               |
-| --------------- | ------------------------------------------------------------------------- |
-| `binary_sensor` | Show something `True` or `False`.                                         |
-| `sensor`        | Show info from TESMart KVM control API. |
-| `switch`        | Switch something `True` or `False`.                                       |
+- **4x1 DVI KVM Control Panel** (DKS0401A30)
+- **8x1 HDMI KVM Control Panel** (HKS0801A30, HKS0801A20, HKE0802A10, HKS0801A40)
+- **8x1 HDMI Switch (KVM) Controller** (HSW0801A10, HSW0801A1U, HKS0801A1U)
+- **16x1 HDMI Switch Controller** (HKS1601A10, HSW1601A10, HKS1601A1U, HSW1601A1U)
+- **Matrix**:
+  - **4x4 HDMI Matrix Control Panel V2** (HMA0404A40, HMA0404B40, HMA0404B50, HMA0404B30, HME040410H, HME040806R, HMA0404A1U, HMA0404A70, HMA0404A60)
+  - **8x8 HDMI Matrix Control Panel V2** (HMA0808A10, HMA0808A20, HMA0808A30, HMA0808A1U)
+- **16x16 Matrix Controller** (HMA1616A10, HMA1616A20)
 
 ## Installation
 
-1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
-2. If you do not have a `custom_components` directory (folder) there, you need to create it.
-3. In the `custom_components` directory (folder) create a new folder called `tesmart_kvm`.
-4. Download _all_ the files from the `custom_components/tesmart_kvm/` directory (folder) in this repository.
-5. Place the files you downloaded in the new directory (folder) you created.
-6. Restart Home Assistant
-7. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "TESMart KVM control"
+#### 1. Install custom component
+ - Using HACS
+ - Install manually: copy all files in `custom_components/tesmart_lan` to your `<config directory>/custom_components/tesmart_lan/` directory.
 
-Using your HA configuration directory (folder) as a starting point you should now also have this:
+#### 2. Restart Home-Assistant.
+#### 3. Add the configuration to your configuration.yaml.
+#### 4. Restart Home-Assistant again.
 
-```text
-custom_components/tesmart_kvm/translations/en.json
-custom_components/tesmart_kvm/translations/fr.json
-custom_components/tesmart_kvm/translations/nb.json
-custom_components/tesmart_kvm/translations/sensor.en.json
-custom_components/tesmart_kvm/translations/sensor.fr.json
-custom_components/tesmart_kvm/translations/sensor.nb.json
-custom_components/tesmart_kvm/translations/sensor.nb.json
-custom_components/tesmart_kvm/__init__.py
-custom_components/tesmart_kvm/api.py
-custom_components/tesmart_kvm/binary_sensor.py
-custom_components/tesmart_kvm/config_flow.py
-custom_components/tesmart_kvm/const.py
-custom_components/tesmart_kvm/manifest.json
-custom_components/tesmart_kvm/sensor.py
-custom_components/tesmart_kvm/switch.py
+## Upgrading from version 0.0.1.
+
+If you are upgrading from version 0.0.1:
+#### 1. You will need to remove the old integration which is /custom_components/linkplay/ and then install the new integration.
+#### 2. You will need to update the platform configuration to `tesmart_lan` from `tesmart_kvm` in your `configuration.yaml` file.
+
+### Configuration
+
+```yaml
+  - platform: tesmart_lan
+    lans:
+      tesmart_hdmi_switch:
+        friendly_name: Nerdroom HDMI Switch
+        host: !secret hdmi_switch_host
+        sources:
+          HDMI 1: NES
+          HDMI 2: SENES
+          HDMI 3: Nintendo N64
+          HDMI 4: Wii U
+          HDMI 5: HDMI 5
+          HDMI 6: Xbox One
+          HDMI 7: HDMI 7
+          HDMI 8: Sega Genesis
+          HDMI 9: Atari 2600+
+          HDMI 10: HDMI 10
+          HDMI 11: HDMI 11
+          HDMI 12: HDMI 12
+    #      HDMI 13: HDMI 13
+    #      HDMI 14: HDMI 14
+    #      HDMI 15: HDMI 15
+    #      HDMI 16: HDMI 16
+
 ```
 
-## Configuration is done in the UI
+## Todo
 
-<!---->
+1. Proper integration with config_flow
 
-## Contributions are welcome!
+## License
 
-If you want to contribute to this please read the [Contribution guidelines](CONTRIBUTING.md)
-
-## Credits
-
-This project was generated from [@oncleben31](https://github.com/oncleben31)'s [Home Assistant Custom Component Cookiecutter](https://github.com/oncleben31/cookiecutter-homeassistant-custom-component) template.
-
-Code template was mainly taken from [@Ludeeus](https://github.com/ludeeus)'s [integration_blueprint][integration_blueprint] template
-
----
-
-[integration_blueprint]: https://github.com/custom-components/integration_blueprint
-[black]: https://github.com/psf/black
-[black-shield]: https://img.shields.io/badge/code%20style-black-000000.svg?style=for-the-badge
-[buymecoffee]: https://www.buymeacoffee.com/lululombard
-[buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge
-[commits-shield]: https://img.shields.io/github/commit-activity/y/lululombard/tesmart-kvm-homeassistant.svg?style=for-the-badge
-[commits]: https://github.com/lululombard/tesmart-kvm-homeassistant/commits/main
-[hacs]: https://hacs.xyz
-[hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
-[discord]: https://discord.gg/Qa5fW2R
-[discord-shield]: https://img.shields.io/discord/330944238910963714.svg?style=for-the-badge
-[forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
-[forum]: https://community.home-assistant.io/
-[license-shield]: https://img.shields.io/github/license/lululombard/tesmart-kvm-homeassistant.svg?style=for-the-badge
-[maintenance-shield]: https://img.shields.io/badge/maintainer-%40lululombard-blue.svg?style=for-the-badge
-[pre-commit]: https://github.com/pre-commit/pre-commit
-[pre-commit-shield]: https://img.shields.io/badge/pre--commit-enabled-brightgreen?style=for-the-badge
-[releases-shield]: https://img.shields.io/github/release/lululombard/tesmart-kvm-homeassistant.svg?style=for-the-badge
-[releases]: https://github.com/lululombard/tesmart-kvm-homeassistant/releases
-[user_profile]: https://github.com/lululombard
+This project is licensed under MIT license. See [LICENSE](LICENSE) file for details.

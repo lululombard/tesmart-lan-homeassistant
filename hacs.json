@@ -1,5 +1,5 @@
 {
-  "name": "TESMart KVM control",
+  "name": "TESMart Lan RS232 IP control",
   "hacs": "1.6.0",
   "domains": ["binary_sensor", "sensor", "switch"],
   "iot_class": "Local Polling",
