@@ -2,7 +2,7 @@
 
 # TESMart TCPIP Control
 
-This component enables control of Tesmart LAN 232 devices including KVMs, Matrixes, and Soundbars.
+This component enables control of Tesmart LAN 232 devices including KVMs, Matrixes, and Switches.
 
 Included, but not limited to, are:
 
@@ -28,7 +28,7 @@ Included, but not limited to, are:
 ## Upgrading from version 0.0.1.
 
 If you are upgrading from version 0.0.1:
-#### 1. You will need to remove the old integration which is /custom_components/linkplay/ and then install the new integration.
+#### 1. You will need to remove the old integration which is /custom_components/tesmart-kvm-homeassistant/ and then install the new integration.
 #### 2. You will need to update the platform configuration to `tesmart_lan` from `tesmart_kvm` in your `configuration.yaml` file.
 
 ### Configuration
