@@ -26,6 +26,7 @@ from homeassistant.helpers.reload import async_setup_reload_service
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "tesmart_lan"  # Define the domain
+PLATFORMS = ["media_player"]
 
 CONF_LAN = "lans"
 CONF_HOST = "host"
@@ -55,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the template binary sensors."""
-    await async_setup_reload_service(hass, DOMAIN)
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     async_add_entities(await _async_create_entities(hass, config))
 
 
@@ -99,11 +100,11 @@ class TesmartLan(MediaPlayerEntity):
             self._source_list = loads(dumps(sources).strip('[]'))
         else:
             self._source_list = SOURCES.copy()
-            
+
         self._source_ignore = []  # Initialize _source_ignore as an empty list
         if sources is not None and CONF_SOURCE_IGNORE in sources:
             self._source_ignore = sources[CONF_SOURCE_IGNORE]
-            
+
         self.active_port = None  # Initialize active_port attribute
         self._sound_mode = None
         self._last_selected_source = None  # Initialize last selected source attribute
@@ -217,14 +218,14 @@ class TesmartLan(MediaPlayerEntity):
             s.send(data)
         except Exception:
             pass
-        
+
         self._sound_mode = sound_mode
         self.async_schedule_update_ha_state()
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
-        
+
         # Retrieve the last selected source from the entity registry
         if self.entity_id in self.hass.data:
             self._last_selected_source = self.hass.data[self.entity_id].get("last_selected_source")
