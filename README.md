@@ -17,23 +17,35 @@ Included, but not limited to, are:
 
 ## Installation
 
-#### 1. Install custom component
- - Using HACS
- - Install manually: copy all files in `custom_components/tesmart_lan` to your `<config directory>/custom_components/tesmart_lan/` directory.
-
-#### 2. Restart Home-Assistant.
-#### 3. Add the configuration to your configuration.yaml.
-#### 4. Restart Home-Assistant again.
-
-## Upgrading from version 0.0.1.
+### Upgrading from version 0.0.1.
 
 If you are upgrading from version 0.0.1:
-#### 1. You will need to remove the old integration which is /custom_components/tesmart-kvm-homeassistant/ and then install the new integration.
-#### 2. You will need to update the platform configuration to `tesmart_lan` from `tesmart_kvm` in your `configuration.yaml` file.
+1. Remove the old integration which is /custom_components/tesmart-kvm-homeassistant/ and then install the latest version of the integration.
+1. Update the platform configuration in your configuration.yaml file from `tesmart_kvm` to `tesmart_lan`.
+
+### Installation via HACS
+Unless you have a good reason not to, you probably want to install this component via HACS(Home Assistant Community Store)
+1. Ensure that [HACS](https://hacs.xyz/) is installed.
+1. Navigate to HACS -> Integrations
+1. Open the three-dot menu and select 'Custom Repositories'
+1. Put 'https://github.com/lululombard/tesmart-lan-homeassistant/' into the 'Repository' textbox.
+1. Select 'Integration' as the category
+1. Press 'Add'.
+1. Find the tesmart-lan-homeassistant integration in the HACS integration list and install it
+1. Restart Home Assistant.
+1. Add the below configuration examples to your configuration.yaml and secrets.yaml file
+
+### Manual Installation
+1. Copy all files in `custom_components/tesmart_lan` to your `<config directory>/custom_components/tesmart_lan/` directory.
+1. Restart Home-Assistant.
+1. Add the configuration to your configuration.yaml and secrets.yaml.
+1. Restart Home-Assistant again.
 
 ### Configuration
+Add the following to your configuration.yaml file changing the values for friendly_name, host ip, and the source names. Note: this example makes use of the secrets.yaml file.
 
 ```yaml
+media_player:
   - platform: tesmart_lan
     lans:
       tesmart_hdmi_switch:
@@ -57,6 +69,12 @@ If you are upgrading from version 0.0.1:
     #      HDMI 15: HDMI 15
     #      HDMI 16: HDMI 16
 
+```
+Example secrets.yaml file:
+```yaml
+# Use this file to store secrets like usernames and passwords.
+# Learn more at https://www.home-assistant.io/docs/configuration/secrets/
+upstairs_hdmi_switch_host: "192.168.1.10"
 ```
 
 ## Todo
