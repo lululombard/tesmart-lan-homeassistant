@@ -34,29 +34,29 @@ If you are upgrading from version 0.0.1:
 ### Configuration
 
 ```yaml
+media_player:
   - platform: tesmart_lan
     lans:
       tesmart_hdmi_switch:
-        friendly_name: Nerdroom HDMI Switch
-        host: !secret hdmi_switch_host
+        friendly_name: Upstairs HDMI Switch
+        host: !secret upstairs_hdmi_switch_host
         sources:
-          HDMI 1: NES
-          HDMI 2: SENES
-          HDMI 3: Nintendo N64
-          HDMI 4: Wii U
-          HDMI 5: HDMI 5
-          HDMI 6: Xbox One
-          HDMI 7: HDMI 7
-          HDMI 8: Sega Genesis
-          HDMI 9: Atari 2600+
-          HDMI 10: HDMI 10
-          HDMI 11: HDMI 11
-          HDMI 12: HDMI 12
-    #      HDMI 13: HDMI 13
-    #      HDMI 14: HDMI 14
-    #      HDMI 15: HDMI 15
-    #      HDMI 16: HDMI 16
-
+          HDMI 1: 'Nvidia Shield'
+          HDMI 2: 'RetroTINK'
+          HDMI 3: 'Nintendo Gamecube'
+          HDMI 4: 'Nintendo WiiU'
+          HDMI 5: 'Nintendo Switch'
+          HDMI 6: 'Playstation 3'
+          HDMI 7: 'HDMI 7'
+          HDMI 8: 'Xbox 360'
+          HDMI 9: 'HDMI 9'
+          HDMI 10: 'Analogue Pocket'
+          HDMI 11: 'Valve Steam Deck'
+          HDMI 12: 'Analogue Duo'
+          HDMI 13: 'MiSTer'
+          HDMI 14: 'HDMI 14'
+          HDMI 15: 'HDMI 15'
+          HDMI 16: 'HDMI 16'
 ```
 
 ## Todo
