@@ -11,8 +11,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
 )
 from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SELECT_SOUND_MODE,
+    MediaPlayerEntityFeature
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -133,8 +132,8 @@ class TesmartLan(MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         support = 0
-        support |= SUPPORT_SELECT_SOURCE
-        support |= SUPPORT_SELECT_SOUND_MODE
+        support |= MediaPlayerEntityFeature.SELECT_SOURCE
+        support |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         return support
 
     @property
