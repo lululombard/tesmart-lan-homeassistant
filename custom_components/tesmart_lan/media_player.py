@@ -10,15 +10,12 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
 )
-from homeassistant.components.media_player.const import (
-    MediaPlayerEntityFeature
-)
+from homeassistant.components.media_player.const import MediaPlayerEntityFeature
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     STATE_ON,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.reload import async_setup_reload_service
 
@@ -34,7 +31,7 @@ CONF_SOURCES = "sources"
 CONF_UNIQUE_ID = "unique_id"
 CONF_SOURCE_IGNORE = "source_ignore"
 
-SOURCES = {f'HDMI {i}': f'HDMI {i}' for i in range(1, 17)}
+SOURCES = {f"HDMI {i}": f"HDMI {i}" for i in range(1, 17)}
 
 LAN_SCHEMA = vol.Schema(
     {
@@ -43,8 +40,9 @@ LAN_SCHEMA = vol.Schema(
         vol.Optional(CONF_SOURCES): cv.ensure_list,
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Optional(CONF_SOURCE_IGNORE, default=[]): vol.All(cv.ensure_list, [cv.string]),
-
+        vol.Optional(CONF_SOURCE_IGNORE, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
     }
 )
 
@@ -96,7 +94,7 @@ class TesmartLan(MediaPlayerEntity):
         self.port = port
         self.sources = sources
         if sources is not None and sources != {}:
-            self._source_list = loads(dumps(sources).strip('[]'))
+            self._source_list = loads(dumps(sources).strip("[]"))
         else:
             self._source_list = SOURCES.copy()
 
@@ -198,9 +196,7 @@ class TesmartLan(MediaPlayerEntity):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
-            data = bytes.fromhex(
-                f"AABB0301{int(self.sources.index(source) + 1):02x}EE"
-            )
+            data = bytes.fromhex(f"AABB0301{int(self.sources.index(source) + 1):02x}EE")
             s.send(data)
         except Exception:
             pass
@@ -227,12 +223,16 @@ class TesmartLan(MediaPlayerEntity):
 
         # Retrieve the last selected source from the entity registry
         if self.entity_id in self.hass.data:
-            self._last_selected_source = self.hass.data[self.entity_id].get("last_selected_source")
+            self._last_selected_source = self.hass.data[self.entity_id].get(
+                "last_selected_source"
+            )
 
     async def async_will_remove_from_hass(self):
         """Entity being removed from hass."""
         # Store the last selected source in the entity registry
         if self.entity_id not in self.hass.data:
             self.hass.data[self.entity_id] = {}
-        self.hass.data[self.entity_id]["last_selected_source"] = self._last_selected_source
+        self.hass.data[self.entity_id]["last_selected_source"] = (
+            self._last_selected_source
+        )
         await super().async_will_remove_from_hass()
