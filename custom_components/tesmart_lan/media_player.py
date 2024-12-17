@@ -1,7 +1,7 @@
 import logging
-import time
 import socket
-from json import loads, dumps  # Add this import
+import time
+from json import dumps, loads  # Add this import
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
