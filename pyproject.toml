@@ -1,10 +1,16 @@
+[tool.codespell]
+# Check filename spelling in addition to file contents
+check-filenames = ''
+ignore-words-list = 'hass'
+
 [tool.ruff]
 fix = true
 show-fixes = true
 
 [tool.ruff.lint]
-extend-select = [  
+extend-select = [
     "UP", # Replaces pyupgrade
+    "I"
 ]
 ignore = [
     # May conflict with the formatter, https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules

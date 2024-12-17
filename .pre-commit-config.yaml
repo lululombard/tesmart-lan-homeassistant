@@ -6,8 +6,25 @@ repos:
       - id: check-yaml
       - id: end-of-file-fixer
       - id: trailing-whitespace
+      - id: no-commit-to-branch
+        args:
+          - --branch=main
+      - id: check-json
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.8.1
     hooks:
       - id: ruff
+        additional_dependencies:
+          - tomli
       - id: ruff-format
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
+    hooks:
+      - id: codespell
+        additional_dependencies:
+          - tomli
+exclude: |
+  (?x)^(
+    .devcontainer/.*|
+    .vscode/.*
+  )$
