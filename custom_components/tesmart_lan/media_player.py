@@ -1,6 +1,5 @@
 import logging
 import socket
-import time
 from json import dumps, loads  # Add this import
 
 import homeassistant.helpers.config_validation as cv
@@ -168,8 +167,13 @@ class TesmartLan(MediaPlayerEntity):
             data = bytes.fromhex("AABB031000EE")
             _LOGGER.debug(f"Sending {data} to {self.host}:{self.port}")
             s.send(data)
-            time.sleep(0.2)
-            self.active_port = self.source_list[s.recv(6)[5] - 1]
+            response = []
+            while len(response) < 6:
+                response.extend(s.recv(6 - len(response)))
+                _LOGGER.debug(f"{self.host}:{self.port} responded with {response}")
+            _LOGGER.info(f"Setting Active Port to {self.source_list[response[4]]}")
+            self.active_port = self.source_list[response[4]]
+
         except Exception:
             _LOGGER.exception(f"Getting source from {self.host}:{self.port} failed")
             pass
