@@ -95,8 +95,10 @@ class TesmartLan(MediaPlayerEntity):
         self.sources = sources
         if sources is not None and sources != {}:
             self._source_list = loads(dumps(sources).strip("[]"))
+            _LOGGER.info(f"Setting source list: {self._source_list}")
         else:
             self._source_list = SOURCES.copy()
+            _LOGGER.info(f"Defaulting source list: {self._source_list}")
 
         self._source_ignore = []  # Initialize _source_ignore as an empty list
         if sources is not None and CONF_SOURCE_IGNORE in sources:
@@ -164,10 +166,12 @@ class TesmartLan(MediaPlayerEntity):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
             data = bytes.fromhex("AABB031000EE")
+            _LOGGER.debug(f"Sending {data} to {self.host}:{self.port}")
             s.send(data)
             time.sleep(0.2)
             self.active_port = self.sources[s.recv(6)[5] - 1]
         except Exception:
+            _LOGGER.exception(f"Getting source from {self.host}:{self.port} failed")
             pass
 
         return self.active_port
@@ -197,8 +201,12 @@ class TesmartLan(MediaPlayerEntity):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
             data = bytes.fromhex(f"AABB0301{int(self.sources.index(source) + 1):02x}EE")
+            _LOGGER.debug(f"Sending {data} to {self.host}:{self.port}")
             s.send(data)
         except Exception:
+            _LOGGER.exception(
+                f"Setting source to {source} failed. Sources: {self.sources}"
+            )
             pass
         self.async_schedule_update_ha_state()
 
@@ -210,8 +218,10 @@ class TesmartLan(MediaPlayerEntity):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
             data = bytes.fromhex(f"AABB0302{packet}EE")
+            _LOGGER.debug(f"Sending {data} to {self.host}:{self.port}")
             s.send(data)
         except Exception:
+            _LOGGER.exception("Setting sound mode failed")
             pass
 
         self._sound_mode = sound_mode
