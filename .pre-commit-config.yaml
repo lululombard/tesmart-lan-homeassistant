@@ -1,32 +1,36 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.3.0
+    rev: v5.0.0
     hooks:
       - id: check-added-large-files
       - id: check-yaml
       - id: end-of-file-fixer
       - id: trailing-whitespace
-  - repo: local
+      - id: no-commit-to-branch
+        args:
+          - --branch=main
+      - id: check-json
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.8.3
     hooks:
-      - id: black
-        name: black
-        entry: black
-        language: system
-        types: [python]
-        require_serial: true
-      - id: flake8
-        name: flake8
-        entry: flake8
-        language: system
-        types: [python]
-        require_serial: true
-      - id: reorder-python-imports
-        name: Reorder python imports
-        entry: reorder-python-imports
-        language: system
-        types: [python]
-        args: [--application-directories=custom_components]
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v2.2.1
+      - id: ruff
+        additional_dependencies:
+          - tomli
+      - id: ruff-format
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
     hooks:
-      - id: prettier
+      - id: codespell
+        additional_dependencies:
+          - tomli
+exclude: |
+  (?x)^(
+    .devcontainer/.*|
+    .vscode/.*
+  )$
+
+# Configuration per https://pre-commit.ci/#configuration
+ci:
+  autoupdate_schedule: monthly
+  skip: [no-commit-to-branch]
+  autoupdate_commit_msg: 'ci(pre-commit.ci): pre-commit autoupdate'

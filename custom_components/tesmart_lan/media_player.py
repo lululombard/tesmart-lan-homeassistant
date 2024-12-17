@@ -1,7 +1,6 @@
 import logging
-import time
 import socket
-from json import loads, dumps  # Add this import
+from json import dumps, loads  # Add this import
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
@@ -10,16 +9,12 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
 )
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SELECT_SOUND_MODE,
-)
+from homeassistant.components.media_player.const import MediaPlayerEntityFeature
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     STATE_ON,
 )
-from homeassistant.core import callback
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.reload import async_setup_reload_service
 
@@ -35,7 +30,7 @@ CONF_SOURCES = "sources"
 CONF_UNIQUE_ID = "unique_id"
 CONF_SOURCE_IGNORE = "source_ignore"
 
-SOURCES = {f'HDMI {i}': f'HDMI {i}' for i in range(1, 17)}
+SOURCES = {f"HDMI {i}": f"HDMI {i}" for i in range(1, 17)}
 
 LAN_SCHEMA = vol.Schema(
     {
@@ -44,8 +39,9 @@ LAN_SCHEMA = vol.Schema(
         vol.Optional(CONF_SOURCES): cv.ensure_list,
         vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
         vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Optional(CONF_SOURCE_IGNORE, default=[]): vol.All(cv.ensure_list, [cv.string]),
-
+        vol.Optional(CONF_SOURCE_IGNORE, default=[]): vol.All(
+            cv.ensure_list, [cv.string]
+        ),
     }
 )
 
@@ -97,9 +93,11 @@ class TesmartLan(MediaPlayerEntity):
         self.port = port
         self.sources = sources
         if sources is not None and sources != {}:
-            self._source_list = loads(dumps(sources).strip('[]'))
+            self._source_list = loads(dumps(sources).strip("[]"))
+            _LOGGER.info(f"Setting source list: {self._source_list}")
         else:
             self._source_list = SOURCES.copy()
+            _LOGGER.info(f"Defaulting source list: {self._source_list}")
 
         self._source_ignore = []  # Initialize _source_ignore as an empty list
         if sources is not None and CONF_SOURCE_IGNORE in sources:
@@ -133,8 +131,8 @@ class TesmartLan(MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         support = 0
-        support |= SUPPORT_SELECT_SOURCE
-        support |= SUPPORT_SELECT_SOUND_MODE
+        support |= MediaPlayerEntityFeature.SELECT_SOURCE
+        support |= MediaPlayerEntityFeature.SELECT_SOUND_MODE
         return support
 
     @property
@@ -167,10 +165,17 @@ class TesmartLan(MediaPlayerEntity):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
             data = bytes.fromhex("AABB031000EE")
+            _LOGGER.debug(f"Sending {data} to {self.host}:{self.port}")
             s.send(data)
-            time.sleep(0.2)
-            self.active_port = self.sources[s.recv(6)[5] - 1]
+            response = []
+            while len(response) < 6:
+                response.extend(s.recv(6 - len(response)))
+                _LOGGER.debug(f"{self.host}:{self.port} responded with {response}")
+            _LOGGER.info(f"Setting Active Port to {self.source_list[response[4]]}")
+            self.active_port = self.source_list[response[4]]
+
         except Exception:
+            _LOGGER.exception(f"Getting source from {self.host}:{self.port} failed")
             pass
 
         return self.active_port
@@ -200,10 +205,14 @@ class TesmartLan(MediaPlayerEntity):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
             data = bytes.fromhex(
-                f"AABB0301{int(self.sources.index(source) + 1):02x}EE"
+                f"AABB0301{int(self.source_list.index(source) + 1):02x}EE"
             )
+            _LOGGER.debug(f"Sending {data} to {self.host}:{self.port}")
             s.send(data)
         except Exception:
+            _LOGGER.exception(
+                f"Setting source to {source} failed. Sources: {self.sources}"
+            )
             pass
         self.async_schedule_update_ha_state()
 
@@ -215,8 +224,10 @@ class TesmartLan(MediaPlayerEntity):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
             data = bytes.fromhex(f"AABB0302{packet}EE")
+            _LOGGER.debug(f"Sending {data} to {self.host}:{self.port}")
             s.send(data)
         except Exception:
+            _LOGGER.exception("Setting sound mode failed")
             pass
 
         self._sound_mode = sound_mode
@@ -228,12 +239,16 @@ class TesmartLan(MediaPlayerEntity):
 
         # Retrieve the last selected source from the entity registry
         if self.entity_id in self.hass.data:
-            self._last_selected_source = self.hass.data[self.entity_id].get("last_selected_source")
+            self._last_selected_source = self.hass.data[self.entity_id].get(
+                "last_selected_source"
+            )
 
     async def async_will_remove_from_hass(self):
         """Entity being removed from hass."""
         # Store the last selected source in the entity registry
         if self.entity_id not in self.hass.data:
             self.hass.data[self.entity_id] = {}
-        self.hass.data[self.entity_id]["last_selected_source"] = self._last_selected_source
+        self.hass.data[self.entity_id]["last_selected_source"] = (
+            self._last_selected_source
+        )
         await super().async_will_remove_from_hass()
