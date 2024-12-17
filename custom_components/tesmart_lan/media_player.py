@@ -169,7 +169,7 @@ class TesmartLan(MediaPlayerEntity):
             _LOGGER.debug(f"Sending {data} to {self.host}:{self.port}")
             s.send(data)
             time.sleep(0.2)
-            self.active_port = self.sources[s.recv(6)[5] - 1]
+            self.active_port = self.source_list[s.recv(6)[5] - 1]
         except Exception:
             _LOGGER.exception(f"Getting source from {self.host}:{self.port} failed")
             pass
@@ -200,7 +200,9 @@ class TesmartLan(MediaPlayerEntity):
         try:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((self.host, self.port))
-            data = bytes.fromhex(f"AABB0301{int(self.sources.index(source) + 1):02x}EE")
+            data = bytes.fromhex(
+                f"AABB0301{int(self.source_list.index(source) + 1):02x}EE"
+            )
             _LOGGER.debug(f"Sending {data} to {self.host}:{self.port}")
             s.send(data)
         except Exception:
